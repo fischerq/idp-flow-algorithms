@@ -1,2 +1,30 @@
-\addcontentsline{toc}{chapter}{Fazit}
 \chapter*{Fazit}
+\addcontentsline{toc}{chapter}{Fazit}
+
+\section*{Zusammenfassung}
+\addcontentsline{toc}{section}{Zusammenfassung}
+
+In diesem Dokument wurden der Inhalt, die Gestaltung, und die technische Umsetzung zweier Webapplikationen zur Visualisierung von Flussalgorithmen vorgestellt. 
+
+Der Ford-Fulkerson Algorithmus ist anwendbar zur Berechnung maximaler Flüsse, und der Cycle Canceling Algorithmus ermöglicht die Bestimmung von Flüssen mit minimalen Kosten. Beide Algorithmen verfolgen eine iterative Vorgehensweise, indem ausgehend von einem gültigen Fluss in dessen Residualnetzwerk nach einem besonderen Kantenzug gesucht wird. Im Fall des Ford-Fulkerson Algorithmus ist dies ein s-t Pfad, im Cycle Canceling Algorithmus ein Kreis mit negativen Gesamtkosten. Anschließend wird der Fluss entlang des Kantenzugs modifiziert bis sich der Residualgraph ändert, und eine neue Iteration durchgeführt wird. Ein Iterationsschritt verbessert bei beiden Algorithmen die Bewertung des Ergebnisses, sobald keine Modifikation mehr gefunden wird, ist ein Optimum und Ergebnis erreicht.
+
+Die Gestaltung der Applikationen erfolgt analog zu bestehenden Webapplets für andere Graphalgorithmen und ist auf mehrere Tabs gegliedert. Neben Informationsmaterial zur Erläuterung des Algorithmus sind ein Grapheditor enthalten, der die Auswahl beliebiger Probleminstanzen erlaubt. Im Haupttab kann der Algorithmus Schritt für Schritt auf dem gewählten Graph ausgeführt werden, wobei der Zustand der Graphen und der Programmvariablen grafisch dargestellt wird. Bei beiden Algorithmen entspricht dies der alternierenden Anzeige des Flusses, des Residualgraphen, und des besonderen Kantenzugs.
+
+Die technische Umsetzung erfolgte ausgehend von einer bestehenden Codebasis als Webanwendung implementiert in HTML5/CSS/Javascript. Zur Ausgabe des Graphen wird eine Vektorgrafik im SVG Format erzeugt, für die Anpassung des Webseiteninhalts wird die Bibliothek D3.js verwendet. Die verschiedenen logischen Komponenten des Programms bestehen typischerweise aus einen bestimmten Bereich des HTML Dokuments, das von einer Javascript-Routine verändert wird.
+
+\pagebreak
+
+\section*{Möglichkeiten zur Weiterentwicklung}
+\addcontentsline{toc}{section}{Möglichkeiten zur Weiterentwicklung}
+
+Für weitere Arbeiten an den Webapplets gibt es eine Reihe an Ansatzpunkten:
+
+\paragraph{Verbesserung der Visualisierung von Residualgraphen}
+Diese Version stellt die Kanten des Residualgraphen nur mithilfe von Richtungsmarkierungen an den Ursprungskanten dar, die als gerade Linien gezeichnet werden. Eine mögliche Alternative wäre die Erzeugung von separaten, eventuell bogenförmigen Linien, um eine klarere Unterscheidung zwischen Kanten des Graphen und des Residualgraphen zu erzeugen.
+
+\paragraph{Implementierung von Varianten}
+Bei beiden implementierten Algorithmen existieren sehr geringfügige Modifikationen um bessere Laufzeiten zu erreichen. Eine naheliegende Erweiterung wäre, diese Modifikationen zusätzlich zu implementieren, und dem Nutzer die Auswahl zwischen verschiedenen Methoden zu geben. Eventuell wäre es sogar möglich, mehrere Varianten gleichzeitig auszuführen, und die entstehenden Unterschiede anzuzeigen.
+
+\paragraph{Klarere Abgrenzung des Frameworks}
+In der aktuellen Codebasis sind die Grenzen zwischen Aufgaben des Framework und der algorithmus-spezfischen Implementierung nicht besonders eindeutig. Hier wäre möglicherweise eine Umorganisation des Codes wünschenswert, die eine saubere Schnittstelle für die Inhalte des einzelnen Algorithmus bietet. Ein Designziel wäre beispielsweise, sämtliche spezifischen Inhalte (auch die statischen Texte) aus der HTML-Struktur in das Javascript des Algorithmus auszulagern. Mit einer zusätzlichen Auslagerung von Programmlogik, die für mehrere Algorithmen nützlich ist (wie z.B. die Historienverwaltung), sollte eine deutliche Entflechtung des Codes möglich sein, möglicherweise bis zu dem Punkt, dass ein Algorithmus vollständig in einem Javascript enthalten ist (zuzüglich vielleicht einiger Stildefinitionen in einer CSS Datei). Dies sollte nur die Beschreibungsmaterialien, die logische Ausführung des Algorithmus und die Darstellung des Status enthalten.
+

@@ -1,18 +1,221 @@
 \chapter{Implementierung}
+
 \section{Technische Konzepte}
-\subsection{Statische Elemente und Formatierung}
-\subsubsection{HTML5}
-\subsubsection{CSS}
-\subsubsection{SVG}
-\subsection{Dynamische Elemente und Kontrollfluss}
-\subsubsection{Javascript}
-\subsubsection{D3.js}
+
+Die technische Umsetzung der Webapplikationen erfolgt ausgehend von der bestehenden Code-Struktur ähnlicher Andwendungen für andere Algorithmen. Das Framework umfasst die generelle Seitenstruktur, die Tabverwaltung, ein Grapheditor und eine Grundgerüst für die schrittweise Ausführung eines Algorithmus. Implementiert als interaktive Website besteht die Codebasis aus einer Mischung von HTML, CSS und Javascript. 
+
+Im Folgenden werden zunächst die verwendeten Technologien und verwendete Muster vorgestellt. Da der bestehende Quellcode eine relative enge Vermengung von Framework-code mit Algorithmus-spezifischen Teilen erforderte, so dass im Anschluss einige funktionale Einheiten des Quellcodes vorgestellt werden.
+
+\paragraph{HTML5 / CSS}
+Das HTML Dokument stellt das statische Gerüst der Website dar. Es bindet die verschiedenen Skripte zur Kontrolle der interaktiven Elemente ein, enthält die statischen Textinhalte, und definiert Platzhalter für die Anzeige dynamischer Elemente. Der HTML Code befindet sich in den Dateien \texttt{max-flow/index\_en.html} und \texttt{min-cost/index\_en.html}. Einstellungen für die Darstellung verschiedener Webseiten-Elemente befinden sich in den CSS Dateien in \texttt{library/css} und \texttt{library-d3-svg/css}.
+
+\paragraph{Javascript}
+Die Interaktiven Elemente des Graph-Editors und des Algorithmus-Tabs sind mittels Javascript implementiert. Dies umfasst die folgenden Bereiche:
+
+\begin{description}
+    \item [Verwaltung der dynamischen Tabs] Bei Öffnung und Schließen der Tabs wird die Anzeige initialisiert, und optional wird der Benutzer drauf hingewiesen, dass bei Verlassen des Tabs der Zustand zurückgesetzt wird.
+    \item [Entgegennahme von Benutzereingaben] Für die Bearbeitung des Graphen und während der Auswahl von Start/Zielknoten müssen Einagbe-Events entgegengenommen werden.
+    \item [Ausführung von Algorithmus-Schritten] Berechnung der einzelnen Schritte des Algorithmus.
+    \item [Graphdarstellung] Für die Visualisierung muss der angezeigte Graph an die internen Daten angepasst werden.
+\end{description}
+
+\paragraph{SVG}
+
+Die Darstellung des Graphen geschieht als Vektorgrafik. Die Javascript-Routinen modifizieren dafür zwei \texttt{<svg>} Elemente die als Anzeige für Editor und Algorithmus dienen, fügen die nötigen geometrischen Primitiven ein und setzen deren Rendering-Einstellungen. So wird beispielsweise für jeden Knoten des Graphen ein farbiger Kreis und ein Textelement mit der Beschriftung erzeugt; falls der Knoten als Start oder Ziel ausgewählt wird, so wird die Füllfarbe des Kreises geändert.
+
+\paragraph{D3.js}
+
+Für die dynamische Anpassung des Dokuments ist es nötig, das sogenannte \emph{Document Object Model(DOM)} zu ändern. Diese Synchronisierung von komplexeren internen Daten (dem Graphen) mit einer Menge an Elementen des Dokuments erfolgt mithilfe der Javascript-Bibliothek \emph{D3.js}\cite{d3js}.
+
 
 \section{Code-Komponenten und deren Interaktion}
 
 \subsection{Struktur der statischen Seite}
-\subsection{Initialisierung der Applikation}
-\subsection{Verwaltung der Graphendaten}
+
+Die verschiedenen Tabs sind innerhalb des Hauptelements mit der ID \texttt{tabs} definiert. Dieses befindet sich in \texttt{max-flow/index\_en.html} (Z.145) bzw. \texttt{min-cost/index\_en.html} (Z.144). Die Struktur sieht wie folgt aus:
+
+\begin{lstlisting}[caption=Tabstruktur,language=HTML]
+<div id="tabs">
+  <ul>
+    <li><a href="#tab_te"><span>Introduction</span></a></li>
+    <li><a href="#tab_tg"><span>Create a graph</span></a></li>
+    ...
+  </ul>
+  <div id="tab_te"> 
+    (Introduction content: ...)
+  </div>
+  <div id="tab_tg"> ... </div>
+  ...
+</div>
+\end{lstlisting}
+
+Innerhalb des Tab-Sektionen befinden sich die einzelnen Inhalte und Texte. Die dynamischen Tabs enthalten je einen Platzhalter für die erzeugten Vektorgraphiken, in \texttt{max-flow/index\_en.html} (Z.184, Z.261) bzw. \texttt{min-cost/index\_en.html} (Z.191, Z.262). Für dynamische Tabs definiert das Framework noch einige Init/Exit Routinen, diese befinden sich u.A. in \texttt{library-d3-svg/js/Tab.js} und \texttt{max-flow/js/siteLayout.js} bzw. \texttt{min-cost/js/siteLayout.js}.
+
+
+\subsection{Verwaltung der Graphdaten}
+
+Die Graphdaten werden mithilfe des Modells definiert in \texttt{library-d3-svg/js/Graph.js} verwaltet. Das Datenmodell sorgt dafür, dass die Struktur sowohl für den Editor als auch den Algorithmus zugänglich ist. Knoten und Kanten sind per Index auswählbar und enthalten jeweils Adjazenzlisten. Jedes Element des Graphen kann eine Menge an Ressourcen (z.B. Kapazitäten) und Statusinformationen (z.B. Vorgänger-Informationen während der Pfadsuche) mitführen. Der Grapheditor ist in \texttt{library-d3-svg/js/GraphEditor.js} und \texttt{library-d3-svg/js/GraphEditorTab.js} implementiert.
+.
+
 \subsection{Schrittweise Ausführung des Algorithmus}
+
+Die Ausführung des Algorithmus mit den Möglichkeiten der schrittweisen Navigation erfordert eine klare Verwaltung der Zustandsänderungen im Algorithmus.  Dies erfolgt mit der folgenden Struktur:
+
+Der aktuelle Zustand ist in der Variable \texttt{state} \texttt{max-flow/js/FordFulkersonAlgorithm.js} (Z.326) bzw. \texttt{min-cost/js/CycleCancelingAlgorithm.js} (Z.305) gespeichert, mit zusätzlicher Statusinformation eingebettet in den Graphen. Beim Durchlaufen des Algorithmus werden diese Statusinformationen in eine Historie kopiert, um eine Rückwärtsnavigation zu erlauben.
+
+\begin{lstlisting}[caption=Historie der Berechnungsschritte,language=Javascript]
+this.addReplayStep = function(){
+  replayHistory.push({
+    "graphState": Graph.instance.getState(),
+    "state": JSON.stringify(state),
+    ...
+  });
+};
+
+this.previousStepChoice = function() {
+  var oldState = replayHistory.pop();
+  Graph.instance.setState(oldState.graphState);
+  state = JSON.parse(oldState.state);
+  ...
+  this.update();
+};
+\end{lstlisting}
+
+\pagebreak
+
+Die Ausführungslogik des Algorithmus muss in einzelnen Teilfunktionen gegliedert werden, die je nach aktuellem Berechnungsfortschritt (gespeichert in \texttt{state.current\_step}) die Berechnungen auf den Status anwendet.
+
+\begin{lstlisting}[caption=Schrittweise Ausführung des Algorithmus, language=Javascript]
+this.nextStepChoice = function(d) {
+  // Speichere aktuellen Schritt im Stack
+  this.addReplayStep();
+  switch (state.current_step) {
+    case STEP_SELECTSOURCE:
+      this.selectSource(d);
+      break; 
+    ...   
+    case STEP_FINDNEGATIVECYCLE:
+      findNegativeCycle();
+      break;
+    case STEP_ADJUSTCYCLE:
+      adjustCycle();
+      break;
+    ...
+  }
+  this.update();
+};
+
+function adjustCycle() {
+  for(var i = 0; i < state.cycle.length; ++i)
+  {
+    var edge = Graph.instance.edges.get(state.cycle[i]["edge"]);
+
+    edge.state.flow += state.cycle_min_flow * state.cycle[i]["direction"];
+  }
+  state.cycle_min_flow = 0;
+  state.cycle = [];
+  state.show_residual_graph = false;
+  state.current_step = STEP_MAINLOOP; 
+}
+\end{lstlisting}
+
 \subsection{Darstellung der Graph-Visualisierung}
+
+Die Generierung der Vektorgrafik zur Anzeige des Graphen erfolgt größtenteils in \texttt{library-d3-svg/js/GraphDrawer.js}. Zusätzlich können die einzelnen Algorithmen noch Modifikationen durchführen, um zusätzliche Informationen anzuzeigen. So werden beispielsweise die Beschriftung und Farbe von Start- und Zielknoten verändert, oder die Kanten verschieden gestaltet um Fluss zu signalisieren.
+
+\begin{lstlisting}[caption=Algorithmus-spezifische Visualisierung, language=Javascript]
+this.onNodesUpdated = function(selection) {
+  selection
+    .selectAll("circle")
+      .style("fill", function(d) {
+        if (d.id == state.sourceId)
+          return const_Colors.StartNodeColor; //green
+        else if (d.id == state.targetId)
+          return const_Colors.StartNodeColor; //green
+        else
+          return global_NodeLayout['fillStyle'];
+      });
+}
+
+this.onEdgesEntered = function(selection) {
+  selection.append("line")
+    .attr("class", "cap")
+    .style("stroke-width",
+        function(d) {
+          return algo.flowWidth(d.resources[0]);
+        });
+
+  selection.append("line")
+    .attr("class", "flow");
+}
+  
+this.onEdgesUpdated = function(selection) {
+  selection.selectAll("line.flow")
+    .style("stroke-width",
+      function(d) {
+      return algo.flowWidth(Graph.instance.edges.get(d.id).state.flow); });      
+  ...
+}
+\end{lstlisting}
+
 \subsection{Synchronisierung von Anzeige und Berechnungszustand}
+
+Um den aktuellen Status des Algorithmus sichtbar zu machen, befinden sich innerhalb des Algorithmus-Tabs drei weitere Tabs um eine Beschreibung des aktuellen Schritts, den aktuellen Schritt in Pseudocode, und die aktuellen Variablenwerte anzuzeigen. Die Beschreibungen und Pseudocode-Informationen sind im HTML Dokument gelistet und werden mithilfe von D3.js ein/ausgeblendet oder farbig markiert. Für die Variablenwerte wurden Platzhalter im HTML platziert, in die Werte eingetragen werden.
+
+
+\begin{lstlisting}[caption=Tabs zur Anzeige des aktuellen Status des Algorithmus, language=HTML]
+<div id="ta_div_statusTabs">
+  <ul>
+    <li><a href="#ta_div_statusErklaerung">Explanation</a></li>
+    <li><a href="#ta_div_statusPseudocode">Pseudocode</a></li>
+    <li><a href="#ta_div_variables">Variable State</a></li>
+  </ul>
+  <div id="ta_div_statusErklaerung">
+    <div id="explanation-select-source">
+      <h3>First choose a source node</h3>
+      <p>Click on a node to select it as the source/starting node s</p>
+    </div>
+    <div id="explanation-select-target">
+      <h3>Then choose a target node</h3>
+      <p>Click on a node to select it as the target/sink node t</p>
+    </div>
+    ...
+   </div>
+  <div class="PseudocodeWrapper" id="ta_div_statusPseudocode"> ... </div>
+  <div id="ta_div_statusVariables">
+    <h3>Variable State</h3>
+    <table class="algoInformationen">
+      <tr>
+        <th class="algoInfoTH"><span>cycle</span></th>
+        <th class="algoInfoTH"><span>adjustment</span></th>
+      </tr>
+      <tr>
+        <td id="variable-value-cycle" class="algoInfoTD">-</td>
+        <td id="variable-value-adjustment" class="algoInfoTD">-</td>
+      </tr>
+    </table>
+  </div>
+</div>
+\end{lstlisting}
+
+
+\begin{lstlisting}[caption=Anzeige des aktuellen Status, language=Javascript]
+this.updateDescriptionAndPseudocode = function() {
+  var sel = d3.select("#ta_div_statusPseudocode").selectAll("div");
+  sel.classed("marked", function(a, pInDivCounter, divCounter) {
+    return d3.select(this).attr("id") === "pseudocode-"+state.current_step;
+  });
+  var sel = d3.select("#ta_div_statusErklaerung").selectAll("div");
+  sel.style("display", function(a, divCounter) {
+    return (d3.select(this).attr("id") === "explanation-"+state.current_step) ? "block" : "none";
+  });
+  ...
+};
+
+this.updateVariables = function() {
+  ... 
+  var path_string = "["+path_edge_strings.join(",")+"]";
+  d3.select("#variable-value-path").text(path_string);
+  d3.select("#variable-value-augmentation").text(state.augmentation);
+}
+\end{lstlisting}
